@@ -74,8 +74,8 @@
   pubblic Order prepare(@RequestBody Order order) {
       int price = 0;
       
-      Product[] products = template.postForObject("http://product-service/ids", order.getProductIds(), Product.class);
-      Customer customer = template.getForObject("http://customer-service/withAccounts/{id}", Customer.class, order.getCustomerId());
+      Product[] products = template.getForObject("http://product-service/products", order.getProductIds(), Product.class);
+      Customer customer = template.getForObject("http://customer-service/customer/{id}", Customer.class, order.getCustomerId());
       
       for(Product product: products) {
           price += product.getPrice();
