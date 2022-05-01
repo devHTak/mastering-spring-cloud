@@ -86,7 +86,7 @@
                   return a.getBalance() > priceDiscounted;
               }).findFirst();
               
-       if(account.ifPresent()) {
+       if(account.isPresent()) {
             order.setAccountId(account.get().getId());
             order.setStatus(OrderStatus.ACCEPTED);
             order.setPrice(priceDiscounted);
