@@ -35,7 +35,7 @@
         eureka:
           enabled: false
         list-of-servers: localhost:8091
-    product-service
+    product-service:
       ribbon:
         eureka:
           enabled: false
