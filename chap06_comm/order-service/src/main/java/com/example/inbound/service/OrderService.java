@@ -26,11 +26,11 @@ public class OrderService {
     private final ProductClient productClient;
 
     public List<Order> createOrder(OrderResource orderResource) throws JsonProcessingException {
-        List<ProductResponse> products = productClient.getProductsByProductIds(orderResource.getProductIds());
+        List<ProductResponse> products = productClient.getProductsByProductIds(orderResource).getBody();
         long price = products.stream().map(product -> product.getPrice())
                 .reduce(0L, (prev, post) -> prev += post);
 
-        return orderRepository.saveAll(Arrays.stream(orderResource.getProductIds())
+        return orderRepository.saveAll(orderResource.getProductIds().stream()
                 .map(productId -> {
                     return Order.builder()
                             .orderId(UUID.randomUUID().toString())
