@@ -37,7 +37,12 @@
   - Time-based sliding window (시간 기반)
     - 시간 기반도 동일하게 n개의 원형배열로 구현된다. 
     - n은 시간(초, epoch second)단위로 10으로 설정하면 1초씩 10개의 부분 집계 버킷가 생긴다. 동일하게 시간이 흐르면 가장 오래된 부분 집계 버킷이 제거되고 총 집계가 갱신된다.
- 
+
+- Resillience4j는 런타임에 다양한 방법으로 서킷 브레이커의 정보 공개
+  - 서킷 브레이커의 현재 상태를 마이크로 서비스 액추에이터 상태 점검 엔드 포인트(/actuator/health)를 사용해 모니터링할 수 있다.
+  - 서킷 브레이커는 상태 전이 등의 이벤트 액추에이터 엔드 포인트(/actuator/citcuitbreakerevents)를 게시한다.
+  - 서킷 브레이커 스프링 부트의 매트릭스 시스템과 통합돼 있으며 이를 이용해 프로테우스와 같은 모니터링 도구에 메트릭을 게시할 수 있다.
+
 - Resillience4j Circuitbreaker 설정 
   (추가적인 내용은 공식문서에서 확인 가능: https://resilience4j.readme.io/docs/circuitbreaker#create-and-configure-a-circuitbreaker)
   - name: 서킷브레이커의 이름
@@ -53,8 +58,9 @@
   - ignoreExceptions: 해당 값에 기재한 exception은 모두 실패로 집계하지 않는다.
   - recordExceptions: 해당 값에 기재한 exception은 모두 실패로 집계한다.
 
-
+#### 구현
 
 #### 참조
 
 - https://bottom-to-top.tistory.com/57
+- https://cheese10yun.github.io/resilience4j-basic/
