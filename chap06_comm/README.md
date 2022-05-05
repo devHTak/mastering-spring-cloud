@@ -142,3 +142,34 @@
 
 - 여러 존의 지원
   - 모든 마이크로 서비스가 두 개의 인스턴스를 실행하고 서로 다른 존으로 분리됐어도 페인 클라이언트는 동작한다.
+
+- 페인 인터페이스 개발하기
+  - Application 에 @EnableFeignClients 추가
+  - Feign Client 인터페이스에 @FeignClient(name="") 추가
+    - name 이라는 필수 속성이 있다. 서비스 디스커버리를 사용할 경우 호출되는 마이크로서비스 이름에 해당
+  - @GetMapping, @PostMapping 등을 사용하여 특정 HTTP API End point와 연관지을 수 있다.
+
+- 수동으로 클라이언트 생성하기
+  ```java
+  AccountClient client = Feign.builder().client(new OkHttpClient())
+                              .encoder(new JAXBEncoder())
+                              .decoder(new JAXBDecoder())
+                              .contract(new JAXRSContract())
+                              .requestInterceptor(new BasicAuthRequestInterceptor("user", "password"))
+                              .target(AccountClient.class, "http://client-service");
+  ```
+  
+  - 사용자 정의 클라이언트
+    - @Configuration
+      - 스프링 빈을 선언하여 속성을 재정의할 수 있다.
+    - application.yml
+      ```yml
+      feign:
+        client:
+          account-service:
+            connectTimeout: 5000
+            readTimeout: 5000
+            loggerLevel: basic
+      ```
+    - application.yml에서 제공된 설정은 항상 @Configuration 빈의 것보다 우선순위가 높다
+  ```
