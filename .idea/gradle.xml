@@ -23,6 +23,24 @@
       </GradleProjectSettings>
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/chap07_cricuit_breaker/board-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/chap07_cricuit_breaker/board-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/chap07_cricuit_breaker/user-service" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/chap07_cricuit_breaker/user-service" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+      <GradleProjectSettings>
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$/eureka-service" />
         <option name="modules">
           <set>

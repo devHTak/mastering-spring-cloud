@@ -24,6 +24,18 @@ public class GatewayRouter {
                                     .rewritePath("/order-service/(?<segment>/*)", "/$\\{segment}" ))
                             .uri("lb://ORDER-SERVICE");
                 })
+                .route(r -> {
+                    return r.path("/board-service/**")
+                            .filters(f -> f.filter(globalLoggingFilter.apply(new GlobalLoggingFilter.Config(true, true)))
+                                    .rewritePath("/board-service/(?<segment>/*)", "/$\\{segment}"))
+                            .uri("lb://BOARD-SERVICE");
+                })
+                .route(r -> {
+                    return r.path("/user-service/**")
+                            .filters(f -> f.filter(globalLoggingFilter.apply(new GlobalLoggingFilter.Config(true, true)))
+                                    .rewritePath("/user-service/(?<segment>/*)", "/$\\{segment}"))
+                            .uri("lb://USER-SERVICE");
+                })
                 .build();
     }
 }
