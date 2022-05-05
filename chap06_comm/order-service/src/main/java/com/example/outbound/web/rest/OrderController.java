@@ -20,6 +20,7 @@ public class OrderController {
 
     @PostMapping("/orders")
     public ResponseEntity<List<Order>> prepare(@RequestBody OrderResource orderResource) throws JsonProcessingException {
+        orderResource.getProductIds().forEach(System.out::println);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(orderService.createOrder(orderResource));
     }

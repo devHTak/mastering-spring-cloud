@@ -13,6 +13,7 @@ public class OrderControllerAdvice {
 
     @ExceptionHandler(value = JsonProcessingException.class)
     public ResponseEntity<String> exceptionHandler(JsonProcessingException e) {
+        e.printStackTrace();
         log.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
     }
