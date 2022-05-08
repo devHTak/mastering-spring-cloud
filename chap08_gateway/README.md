@@ -55,4 +55,83 @@
     |SetResponseHeader|이름과 값을 입력받아 HTTP 응답에 헤더를 추가|SetResponseHeader=X-Response-ID, 123|
     |SetStatus|유효한 HTTP 상태 입력값을 받아 응답에 설정|SetStatus=401|
 
-  #### 
+#### Spring Cloud Gateway 설정
+
+- filter 생성
+  ```java
+  @Component
+  @Slf4j
+  @Getter
+  public class GlobalLoggingFilter extends AbstractGatewayFilterFactory<GlobalLoggingFilter.Config> {
+
+      @Override
+      public GatewayFilter apply(Config config) {
+          return (exchange, chain) -> {
+              if(config.isPreLogger())
+                  log.info("Gateway Pre Logger: requestId - {}", exchange.getRequest().getId());
+
+              return chain.filter(exchange).then(Mono.fromRunnable(() -> {
+                  if(config.isPostLogger())
+                      log.info("Gateway Post Logger: response status - {}", exchange.getResponse().getStatusCode());
+              }));
+          };
+      }
+
+      @Getter @Setter
+      @NoArgsConstructor @AllArgsConstructor
+      public static class Config {
+          private boolean preLogger;
+          private boolean postLogger;
+      }
+  }
+  ```
+  - AbstractGatewayFilterFactory 를 상속받아 public GatewayFilter apply(Config config) 오버라이딩
+    - Config 클래스를 생성하여 내부에서 사용할 수 있다.
+
+- Route 및 Predicates, Filters 정의
+  - YAML로 정의
+    ```yml
+    spring:
+      cloud:
+        gateway:
+          default-filters:
+            - name: GlobalFilter
+              args:
+                baseMessage: Spring Cloud Gateway GlobalFilter
+                preLogger: true
+                postLogger: true
+          routes:
+            - id: product-service
+              uri: lb://product-service
+              predicates:
+                - Path=/product-service/**
+                - RewritePath=/product-service/(?<segment>/*), /$\\{segment}
+              filters:
+                - name: ProductFilter
+                  args:
+                    baseMessage: Spring Cloud Gateway UserFilter
+                    preLogger: true
+                    postLogger: true
+    ```
+    - global filter, route 별 filter를 정해줄 수 있다.
+  
+  - JAVA로 정의
+    ```yml
+    @Configuration
+    public class GatewayRouter {
+
+        @Bean
+        public RouteLocator route(RouteLocatorBuilder builder, GlobalLoggingFilter globalLoggingFilter) {
+            return builder.routes()
+                    .route(r -> {
+                        return r.path("/product-service/**")
+                                .filters(f-> f.filter(globalLoggingFilter.apply(new GlobalLoggingFilter.Config(true, true)))
+                                        .rewritePath("/product-service/(?<segment>/*)", "/$\\{segment}" ))
+                                .uri("lb://PRODUCT-SERVICE");
+                    })
+                    .build();
+        }
+    }
+    ```
+    - Filter를 파라미터로 받아 사용할 수 있다.
+    - path, filter, rewritePath, uri(유레카 연동) 등 설정
