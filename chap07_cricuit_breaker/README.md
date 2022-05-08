@@ -71,6 +71,95 @@
 
 #### 구현
 
+- Resllience4j 설정
+  - YAML 파일로 설정하기
+    ```yml
+    resilience4j:
+      circuitbreaker:
+        user-service:
+          board-service:
+            ringBufferSizeInClosedState: 30
+            ringBufferSizeInHalfOpenState: 30
+            waitDurationInOpenState: 5000ms
+            failureRateThreshold: 20
+            registerHealthIndicator: false
+    ```
+    - ringBufferSizeInClosedState: Circuit이 닫혀있을 때(정상) Ring Buffer 사이즈, 기본값은 100
+    - ringBufferSizeInHalfOpenState: half-open 상태일 때 RingBuffer 사이즈 기본값은 10
+    - waitDurationInOpenState: half closed전에 circuitBreaker가 open 되기 전에 기다리는 기간
+    - failureRateThreshold: Circuit 열지 말지 결정하는 실패 threshold 퍼센테이지
+
+    - Circuit Breaker 생성
+      ```java
+      @Configuration
+      public class CircuitBreakerConfig {
+
+          private final String CIRCUIT_NAME = "board-service";
+
+          @Bean
+          public CircuitBreaker circuitBreaker(CircuitBreakerRegistry registry) {
+              return registry.circuitBreaker(CIRCUIT_NAME);
+          }
+      }
+      ```
+  - Config 파일로 설정하기
+    ```java
+    @Configuration
+    public class CircuitBreakerConfig {
+
+        @Bean
+        public Customizer<Resilience4JCircuitBreakerFactory> circuitBreakerConfig() {
+            return resilience4JCircuitBreakerFactory -> {
+              resilience4JCircuitBreakerFactory.configureDefault(id -> {
+                  return new Resilience4JConfigBuilder(id)
+                          .timeLimiterConfig(timeLimiterConfig())
+                          .circuitBreakerConfig(customizerCircuitBreakerConfig())
+                          .build();
+              });
+            };
+        }
+
+        private TimeLimiterConfig timeLimiterConfig() {
+            return TimeLimiterConfig.custom()
+                    // timeLimiter는 future supplier의 time limit을 정하는 API 기본 1초
+                    .timeoutDuration(Duration.ofSeconds(4))
+                    .build();
+        }
+
+        private io.github.resilience4j.circuitbreaker.CircuitBreakerConfig customizerCircuitBreakerConfig() {
+            return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                    // circuitBreaker 를 열지 결정하는 failure rate, 기본 50
+                    .failureRateThreshold(4f)
+                    // circuitBreaker를 open한 상태를 유지하는 지속 시간 이 기간 이후 half-open 상태 기본 60sec
+                    .waitDurationInOpenState(Duration.ofMillis(1000))
+                    // circuitBreaker 닫힐 때 통화 결과 기록하는 데 사용되는 슬라이딩 창의 유형 구성(카운트 또는 시간 기반)
+                    .slidingWindowType(io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                    // circuitBreaker 닫힐 때 호출 결과를 기록하는 데 사용되는 슬라이딩 창의 크기 구성
+                    .slidingWindowSize(2)
+                    .build();
+        }
+    }
+    ```
+
+- api 호출 부분에서 Circuit breaker 사용
+  - 기존 feign client를 통해 불러오는 코드
+    ```java
+    List<PostResponse> posts = boardClient.getPostsByUserId(userId).getBody();
+    ```
+  - Circuit breaker 사용
+    ```java
+    private final Resilience4JCircuitBreakerFactory circuitBreakerFactory; // bean 에 등록한 CircuitBreakerFactory를 받아옴
+    
+    // ... 생략
+    // METHOD
+    Resilience4JCircuitBreaker circuitBreaker = circuitBreakerFactory.create("board-service");
+    List<PostResponse> posts = circuitBreaker.run(
+            () -> boardClient.getPostsByUserId(userId).getBody(),
+            (throwable) -> new ArrayList<>()
+    );
+    ```
+    - circuirBreker.run(실행 소스, 오류 발생 시);
+
 #### 참조
 
 - https://bottom-to-top.tistory.com/57
