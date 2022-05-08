@@ -28,7 +28,7 @@
     |After Route|Date-time 입력값을 받아서 그 이후에 발생한 요청 매칭|After=2022-05-08T..|
     |Before Route|Date-time 입력값을 받아서 그 전에 발생한 요청 매칭|Before=2022-05-08T..|
     |Between Route|두 개의 date-time을 입력받아 두 날짜 사이에 발생한 요청을 매칭|Between=2022-05-05T..., 2022-05-08T...|
-    |Cookie Route|쿠키 이름과 정규식을 입력받아 HTTP 요청의 헤더에서 쿠키를 찾고 그 값ㅇ르 제공된 표현식과 비교|Cookie=SessionId, abc.|
+    |Cookie Route|쿠키 이름과 정규식을 입력받아 HTTP 요청의 헤더에서 쿠키를 찾고 그 값을 제공된 표현식과 비교|Cookie=SessionId, abc.|
     |Header Route|헤더 이름과 정규식을 입력값으로 받아 HTTP 요청의 헤더에서 특정 헤더를 찾고 그 값을 제공된 표현식과 비교|Header=X-Request-Id, \d+|
     |Host Route|. 구분자를 사용하는 호스트 이름 ANT 스타일 패턴을 입력받아 Host 헤더와 매칭|Host=\*\*.example.org|
     |Method Route|HTTP 메서드를 입력값으로 받아 비교|Method=GET|
@@ -37,3 +37,22 @@
     |RemoteAddr Route|IP 주소 목록을 192.168.0.1/16과 같은 CIDR 표현식으로 받아 요청의 원격 주소와 비교|RemoteAddr=192.168.0.1/16|
     
   - spring.cloud.gateway.routes 속성 아래 정의된 각 라우트에 filters 속성 구성
+    |이름|설명|예제|
+    |---|---|---|
+    |Add RequestHeader|입력값에 제공된 이름과 값으로 HTTP 요청에 헤더 추가|AddRequestHeader=X-Response-ID, 123|
+    |AddRequestParameter|입력값에 제공된 이름과 값으로 HTTP 요청에 질의 추가|AddRequestParameter=id, 123|
+    |AddResponseHeader|입력값에 제공된 이름과 값으로 HTTP 응답에 헤더 추가|AddResponseHeader=X-Response-ID, 123|
+    |Hystrix|히스트릭스 명령 이름의 입력값을 받는다|Hystrix=account-service|
+    |PrefixPath|입력값에 정의된 접두사를 HTTP 요청 경로에 추가|PrefixPath=/api|
+    |RequestRateLimiter|제공된 세 개의 입력값에 단일 사용자의 요청 처리 수 제한, 세 개의 입력값은 초당 최대 요청 수, 초당 최대 요청 처리 용량, 사용자 키를 반환하는 빈|RequestRateLimiter=10, 20, #{@userKeyResolver}|
+    |RedirectTo|HTTP 상태 코드와 리다이렉트 경로를 입력값으로 받아 리다이렉트를 수행하기 위해 Location HTTP 헤더에 추가|RedirectTo=302, http://localhost:8092|
+    |RemoveNonProxyHeaders|전달된요청에서 Keep-Alive, Proxy-Authentication 또는 Proxy-Authorization 등과 같은 몇가지 hop-by-hop 헤더 제거|-|
+    |RemoveRequestHeader|헤더의 이름을 입력값으로 받아 HTTP 요청에서 그것을 제거|RemoveRequestHeader=X-Request-Foo|
+    |RemoveResponseHeader|헤더의 이름을 입력값으로 받아 HTTP 응답에서 그것을 제거|RemoveResponseHeader=X-Response-ID|
+    |RewritePath|Regex 입력과 대체값을 받아 요청 경로 재작성|RewritePath=/account(?<path>/*), /$\{path}|
+    |SecureHeaders|몇가지 보안 헤더를 응답에 추가|-|
+    |SetPath|경로 template 입력값을 사용하는 단일 입력값을 받아 요청 경로 변경|SetPath=/{segment}|
+    |SetResponseHeader|이름과 값을 입력받아 HTTP 응답에 헤더를 추가|SetResponseHeader=X-Response-ID, 123|
+    |SetStatus|유효한 HTTP 상태 입력값을 받아 응답에 설정|SetStatus=401|
+
+  #### 
