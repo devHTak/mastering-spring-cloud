@@ -171,3 +171,117 @@ logging:
       }
     }
     ```
+    
+#### 스프링 클라우드 슬루스
+
+- 로깅과 추적을 위한 유용한 기능을 제공
+  - LogstashTCPAppender에서 봤듯이 단일 요청과 관련된 로그만 필터링 할 수 있는 방법이 없다.
+  - 마이크로 서비스 기반 환경에서 시스템으로 들어오는 요청을 처리할 때 애플리케이션에 의해 교환되는 메시지를 연관 짓는 것은 매우 중요하다.
+
+- sleuth를 사용하면 들어오는 요청을 독립적인 애플리케이션 간에 교환되는 메시지와 응답에 연결할 수 있다.
+  - 연결은 기본적으로 두개의 작업 단위인 span, trace로 정의된다.
+  - traceId: span이 포함된 지연시간 그래프의 아이디
+  - spanId: 발생한 특정 작업의 아이디
+
+- MDC(Mapped Diagnostic Context)
+  - 모든 trace, span id는 Slf4j MDC에 추가되므로 로그 aggregator에서 트레이스 또는 스팬과 관련된 모든 로그를 추출할 수 있다.
+  - MDC는 현재 스레드의 컨텍스트 데이터를 저장하는 맵
+  - MDC에는 spanId, traceId말고 appName(로그 엔트리를 생성하는 애플리케이션의 이름), exportable(르그를 집킨으로 내보낼지 지정)를 저장한다.
+
+- Sleuth 기능
+  - 추상화된 일반적인 분산 추적 데이터 모델을 제공해 집킨과 통합할 수 있다.
+  - 지연 분석에 도움을 주기 위해 타이밍 정보를 기록한다. 여기에는 집킨으로 내보내는 데이터의 양을 관리하는 다양한 샘플링 정책이 포함된다.
+  - 서블릿 필터, 비동기 종단점, RestTemplate, 메시지 채널, 주울 필터, 페인 클라이언트 등과 같은 통신에 참여하는 공통의 스프링 구성요소와의 통합 제공
+
+- Sleuth 애플리케이션 통합
+  - dependency
+    ```
+    // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-sleuth
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth:1.0.0.RELEASE'
+    ```
+  - 로그 형식에 변경
+    ```
+    2022-05-11 22:30:57.902  INFO [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+    2022-05-11 22:30:58.372 ERROR [bar,6bfd228dc00d216b,6bfd228dc00d216b,false] 23030 --- [nio-8081-exec-3] ...
+    2022-05-11 22:31:01.936  INFO [bar,46ab0d418373cbc9,46ab0d418373cbc9,false] 23030 --- [nio-8081-exec-4] ...
+    ```
+    - \[appName, traceId, spanId, exportable] 형식으로 나타나게 된다.
+
+#### Zipkin과 Sleuth 통합하기
+
+- Zipkin
+  - 마이크로서비스 기반 아키텍처에서 지연 문제를 분석하는 데 필요한 타이밍 데이터를 모으는데 도움을 주는 오픈소스 분산 추적 시스템
+  - 4개의 구성 요소  
+    - 웹 UI를 통해 데이터를 수집하고 조회하고 시각화할 수 있다.
+    - 모든 트레이스 데이터의 유효성을 확인, 저장, 인덱스를 구성하는 집킨 콜렉터
+      - 백엔드 저장소로 Cassandra를 사용하며 Elasticsearch, MySQL을 저장소로 지원
+    - 트레이스를 찾고 추출하기 위한 JSON API를 제공
+
+- Zipkin 서버 실행
+  - 방법 1. 도커 컨테이너 실행
+    ```
+    $ docker run -d --name zipkin -p 9411:9411 openzipkin/zipkin
+    ```
+  - 방법 2. 스프링 부트 애플리케이션
+    - dependency
+      ```
+      // https://mvnrepository.com/artifact/io.zipkin.java/zipkin-server
+      implementation 'io.zipkin.java:zipkin-server:2.9.0'
+      // https://mvnrepository.com/artifact/io.zipkin.java/zipkin-autoconfigure-ui
+      implementation 'io.zipkin.java:zipkin-autoconfigure-ui:0.21.0'
+      ```
+    - @EnableZipkinServer
+      ```java
+      @SpringBootApplication
+      @EnableZipkinServer
+      public class ZipkinApplication {
+          public static void main(String[] args) {
+              new SpringApplicationBuilder(ZipkinApplication.class).web(true).run(args);
+          }
+      }
+      ```
+    - application.yml
+      ```yml
+      spring:
+        application:
+          name: zipkin-service
+      server:
+        port: ${PORT:9411}
+      ```
+      
+- 클라이언트 애플리케이션 개발
+  - 프로젝트에서 스프링 클라우드 슬루스와 집킨을 함께 사용하기 위해서는 spring-cloud-starter-zipkin을 의존성 추가하면 된다.
+    - 이렇게 하면 HTTP API를 통해 집킨과 통합
+  - application.yml으로 zipkin-server 연결
+    ```yml
+    spring:
+      zipkin:
+        baseUrl: http://192.168.99.100:9411/ 
+        # baseUrl: http:zipkin-service/ # eureka 활용
+    ```
+  - 기본적으로 스프링 클라우드 슬루스는 들어오는 요청 중 몇개만 전달한다.
+    - spring.slueth.sampler.percentage 속성에 의해 결정되며 0.0과 1.0 사이에 존재
+    - 모든 요청을 추적하기 위해서는 AlwaysSampler 빈 선언
+      ```
+      @Bean
+      public Sampler defaultSampler() { return new AlywasSampler(); }
+      ```
+
+- UI 화면을 접속해보면 서비스 이름, span 이름, trace id, 요청 시간, 지속 시간 등 다양한 조건으로 필터링 가능
+- 모든 마이크로 서비스간의 흐름을 들어오는 각 요청의 타이밍 데이터를 고려해 시각화
+  - 지연 원인을 알 수 있다.
+
+#### 메시지 브로커를 통한 통합
+
+- zipkin은 HTTP 뿐만 아니라 Message Broker를 프록시로 사용할 수 있다.
+- client: rabbitMq 또는 kafka 를 사용
+  ```
+  implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+  implementation 'org.springframework.amqp:spring-rabbit'
+  ```
+- zipkin 서버 변경
+  ```
+  implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin-stream:1.3.6.RELEASE'
+  implementation 'org.springframework.cloud:spring-cloud-starter-stream-rabbit:3.0.13.RELEASE'
+  ```
+  - @EnableZipkinServer 대신 @EnableZipkinStreamServer를 사용
