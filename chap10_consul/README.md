@@ -77,3 +77,30 @@
         ```
         $ docker exec -t consul-1 consul members
         ```
+
+- 분산 컨피규레이션
+  - config library르 사용하는 애플리케이션은 부트스트랩할 때 컨설 키/값 저장소에서 컨피규레이션을 가져온다.
+    - 기본으로 /config 폴더에 저장
+  - bootstrap.yml 파일에 spring.application.name을 order-service로 설정하고 spring.profiles.activ가 zone1이라면 아래와 같은 순서로 속성을 찾는다.
+    - config:/order-service,zone1/
+    - config/order-service/
+    - config/application,zone1,
+    - config/application
+  - 컨설에 속성 관리
+    - 앱 대시보드 KEY/VALUE 색션을 통해 key,value를 등록할 수 있다.
+  - 클라이언트 사용자 정의
+    - spring.cloud.consul.config 접두어 사용
+    |속성|설명|
+    |---|---|
+    |enabled|속성을 false로 하면 컨설 컨피그를 비활성화한다.|
+    |fail-fast| 컨피규레이션 조회 과정에서 오류를 던지거나 연결 설정 오류인 경우 로그를 남길 지 여부에 대해 설정|
+    |prefix|모든 컨피규레이션 값에 대해 기본 폴더 설정 기본값은 /config|
+    |defaultContext|특별한 컨피규레이션이 없는 모든 애플리케이션에서 사용되는 폴더 이름 설정 기본값은 /application|
+    |profileSeperator|프로파일은 애플리케이션 이름에 콤마를 사용해 분리|
+    
+  - 컨피규레이션 변경 모니터링
+    - 컨피규레이션 적재를 위해서는 HTTP /refresh 종단점 요청
+    - 각 속성을 변경하는 경우 컨설의 키 접두사를 감시하는 능력으로 갱신 이벤트가 자동으로 전달된다.
+    - 새로운 컨피규레이션 데이터가 있다면 갱신 이벤트가 큐에 게신된다.
+      - 모든 큐와 익스체인지는 프로젝트에 spring-cloud-starter-consul-all 의존성으로 포함된 스프링 클라우드 버스에 의해 애플리케이션이 시작할 때 생성된다.
+      - 로그 출력 (Refresh keys changed: \[repository.customers\[1].name]
