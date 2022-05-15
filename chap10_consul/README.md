@@ -90,6 +90,7 @@
     - 앱 대시보드 KEY/VALUE 색션을 통해 key,value를 등록할 수 있다.
   - 클라이언트 사용자 정의
     - spring.cloud.consul.config 접두어 사용
+    
     |속성|설명|
     |---|---|
     |enabled|속성을 false로 하면 컨설 컨피그를 비활성화한다.|
