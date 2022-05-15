@@ -217,7 +217,7 @@
 
 #### Kafka
 
-- 예전 작성했던 글로 대체: 
+- 예전 작성했던 글로 대체: https://github.com/devHTak/devhtak.github.io/blob/master/_posts/msa/2021-07-31-SpringCloud_07_MQ.md
 
 #### 출처
 
