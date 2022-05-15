@@ -137,25 +137,22 @@
     - Exchange: 위 코드에서는 TopicExchange를 사용해 주어진 패턴과 일치하는 Queue에 메시지를 전달
     - Binding: Exchange가 Queue에게 메시지를 전달하기 위한 룰. 빈으로 등록한 Queue와 Exchange를 바인딩하면서 Exchange에서 사용될 패턴 설정
     - RabbitTemplate: RabbitTemplate는 Spring boot에서 자동으로 빈 등록을 해주지만 받은 메시지 처리를 위한 messageConverter를 설정하기 위해 설정
+      - Jackson2JsonMessageConverter 로 등록하지 않으면 Listener에서 String Message를 받아 객체로 변경해주어야 한다.(objectMapper.convertValue(obj, type);)
   
   - Listener
     ```java
     @Service
     public class TestConsumer {
 
-        private final ObjectMapper objectMapper;
         private final TestRepository repository;
 
         @Autowired
-        public TestConsumer(ObjectMapper objectMapper, TestRepository repository) {
-            this.objectMapper = objectMapper;
+        public TestConsumer(TestRepository repository) {
             this.repository = repository;
         }
 
         @RabbitListener(queues = "spring-boot")
-        public void receiveMessage(String message) {
-            TestRequest testRequest = objectMapper.convertValue(message, TestRequest.class);
-
+        public void receiveMessage(TestRequest testRequest) {
             Test entity = new Test();
             entity.setMessage(testRequest.getMessage());
 
@@ -185,18 +182,17 @@
 
     }
     ```
+    - Jackson2JsonMessageConverter를 등록하지 않으면, send하기 전에 객체를 String 타입으로 바꿔야 한다(objectMapper.writeValueAsStr(obj);)
   - 전송
     ```java
     @Component
     public class TestProducer {
 
         private final RabbitTemplate rabbitTemplate;
-        private final ObjectMapper objectMapper;
-
+        
         @Autowired
-        public TestProducer(RabbitTemplate rabbitTemplate, ObjectMapper objectMapper) {
+        public TestProducer(RabbitTemplate rabbitTemplate) {
             this.rabbitTemplate = rabbitTemplate;
-            this.objectMapper = objectMapper;
         }
 
         public TestResponse produceTest(TestRequest testRequest) {
@@ -204,7 +200,7 @@
             response.setMessage(testRequest.getMessage());
 
             try {
-                rabbitTemplate.convertAndSend("spring-boot-exchange", "foo.bar.baz", objectMapper.writeValueAsString(testRequest));
+                rabbitTemplate.convertAndSend("spring-boot-exchange", "foo.bar.baz", testRequest);
             } catch (Exception e) {
                 e.printStackTrace();
             }
