@@ -1,0 +1,22 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: consul-client-service
+  config:
+    import: "optional:configserver:http://localhost:8500/"
+  cloud:
+    consul:
+      host: 127.0.0.1
+      port: 8500
+      enabled: true
+      config:
+        enabled: true
+        format: YAML
+        data-key: configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health
