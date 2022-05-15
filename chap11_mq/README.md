@@ -204,7 +204,7 @@
             response.setMessage(testRequest.getMessage());
 
             try {
-                rabbitTemplate.convertAndSend("spring-boot-exchange", objectMapper.writeValueAsString(testRequest));
+                rabbitTemplate.convertAndSend("spring-boot-exchange", "foo.bar.baz", objectMapper.writeValueAsString(testRequest));
             } catch (Exception e) {
                 e.printStackTrace();
             }
