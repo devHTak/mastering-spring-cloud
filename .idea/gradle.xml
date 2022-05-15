@@ -41,10 +41,10 @@
       </GradleProjectSettings>
       <GradleProjectSettings>
         <option name="distributionType" value="DEFAULT_WRAPPED" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/chap08_gateway/gateway-service" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/chap10_consul/consul-client-service" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/chap08_gateway/gateway-service" />
+            <option value="$PROJECT_DIR$/chap10_consul/consul-client-service" />
           </set>
         </option>
       </GradleProjectSettings>
@@ -54,15 +54,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$/eureka-service" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="distributionType" value="DEFAULT_WRAPPED" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$/gateway-service" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/gateway-service" />
           </set>
         </option>
       </GradleProjectSettings>
